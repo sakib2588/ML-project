@@ -1,0 +1,141 @@
+# data_config.yaml
+# Configuration for dataset downloading and raw data management
+
+datasets:
+  cic_ids_2017:
+    # CIC-IDS2017 dataset configuration
+    name: "CIC-IDS2017"
+    description: "Canadian Institute for Cybersecurity Intrusion Detection Dataset 2017"
+    
+    # Download sources (multiple mirrors for reliability)
+    sources:
+      primary:
+        url: "https://www.unb.ca/cic/datasets/ids-2017.html"
+        type: "manual"  # Requires manual download from website
+        note: "Download CSV files from the official UNB website"
+      
+      kaggle:
+        url: "kaggle datasets download -d cicdataset/cicids2017"
+        type: "kaggle"
+        note: "Requires Kaggle API setup: ~/.kaggle/kaggle.json"
+    
+    # File information
+    files:
+      - "Monday-WorkingHours.pcap_ISCX.csv"
+      - "Tuesday-WorkingHours.pcap_ISCX.csv"
+      - "Wednesday-workingHours.pcap_ISCX.csv"
+      - "Thursday-WorkingHours-Morning-WebAttacks.pcap_ISCX.csv"
+      - "Thursday-WorkingHours-Afternoon-Infilteration.pcap_ISCX.csv"
+      - "Friday-WorkingHours-Morning.pcap_ISCX.csv"
+      - "Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.csv"
+      - "Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.csv"
+    
+    # Paths
+    raw_data_dir: "data/raw/cic_ids_2017"
+    processed_data_dir: "data/processed/cic_ids_2017"
+    
+    # Label column
+    label_column: "Label"  # Column name containing attack labels
+    
+    # Estimated size
+    compressed_size_gb: 7.8
+    uncompressed_size_gb: 15.2
+  
+  ton_iot:
+    # TON-IoT dataset configuration
+    name: "TON-IoT"
+    description: "Telemetry dataset of IoT and IIoT sensors"
+    
+    # Download sources
+    sources:
+      primary:
+        url: "https://cloudstor.aarnet.edu.au/plus/s/ds5zW91vdgjEj9i"
+        type: "direct"
+        note: "Direct download from UNSW CloudStor"
+      
+      ieee_dataport:
+        url: "https://ieee-dataport.org/open-access/toniot-datasets"
+        type: "manual"
+        note: "Alternative source via IEEE DataPort"
+    
+    # File information (using Network dataset subset for IDS task)
+    files:
+      - "Train_Test_Network.csv"  # Combined train/test file
+      # Alternative: separate files if using full dataset
+      # - "NF-ToN-IoT-v2.csv"
+      # - "NF-BoT-IoT-v2.csv"
+    
+    # Paths
+    raw_data_dir: "data/raw/ton_iot"
+    processed_data_dir: "data/processed/ton_iot"
+    
+    # Label column
+    label_column: "label"  # Note: lowercase 'label' in TON-IoT
+    
+    # Estimated size
+    compressed_size_gb: 16.0
+    uncompressed_size_gb: 45.0
+
+# Sampling configuration for prototyping
+sampling:
+  enabled: true  # Set to false for full dataset processing
+  
+  # Sample sizes for different experiment modes
+  quick_mode:
+    samples_per_dataset: 100000
+    stratified: true  # Maintain class distribution
+    random_seed: 42
+  
+  medium_mode:
+    samples_per_dataset: 250000
+    stratified: true
+    random_seed: 42
+  
+  validation_mode:
+    samples_per_dataset: 500000
+    stratified: true
+    random_seed: 42
+  
+  # Class balancing strategy
+  balancing:
+    method: "stratified"  # Options: "stratified", "oversample", "undersample"
+    min_samples_per_class: 100  # Ensure at least this many samples per class
+
+# Data loading configuration
+loading:
+  # Chunk size for reading large CSV files
+  chunk_size: 50000  # Read 50K rows at a time to manage memory
+  
+  # Data types optimization to reduce memory
+  optimize_dtypes: true
+  
+  # Caching
+  cache_processed: true
+  cache_dir: "data/cache"
+
+# Memory management for your 11.8GB RAM system
+memory:
+  # Maximum memory usage for data loading (in GB)
+  max_memory_gb: 8.0  # Leave ~3GB for OS and other processes
+  
+  # Batch processing settings
+  use_memory_mapping: true  # Use numpy memmap for large arrays
+  prefetch_batches: 2  # Number of batches to prefetch during training
+
+# Data validation
+validation:
+  check_missing_values: true
+  check_duplicates: true
+  check_label_distribution: true
+  
+  # Maximum allowed missing value percentage
+  max_missing_percent: 10.0
+  
+  # Minimum samples per class for valid training
+  min_class_samples: 50
+
+# Logging
+logging:
+  level: "INFO"  # Options: DEBUG, INFO, WARNING, ERROR
+  save_download_progress: true
+  log_file: "logs/data_download.log"
