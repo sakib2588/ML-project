@@ -1,0 +1,46 @@
+# Virtual env
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Jupyter
+.ipynb_checkpoints/
+
+# VSCode
+.vscode/
+.devcontainer/
+
+# Data / models / logs (do NOT store datasets or model binaries in git)
+data/
+models/
+logs/
+checkpoints/
+
+# OS / misc
+*.swp
+*.DS_Store
+
+
+.vscode/
+.venv/
+__pycache__/
+*.pyc
+.env
+.DS_Store
+
+# ML dirs
+logs/
+models/
+checkpoints/
+
+# data
+data/raw/
+data/processed/
+
+# notebooks cache
+.ipynb_checkpoints/
