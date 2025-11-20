@@ -30,6 +30,11 @@ canonical_features:
     - flow_iat_mean
     - flow_iat_std
 
+# Legacy compatibility block for FeatureEngineer (expects 'missing_features')
+missing_features:
+  mode: "flexible"  # mirror missing_values.mode
+  imputation_value: 0.0
+
 # Feature mapping from dataset-specific columns to canonical schema
 feature_mappings:
   cic_ids_2017:
@@ -222,7 +227,8 @@ transformations:
 # Missing value handling
 missing_values:
   # Strategy: strict or flexible
-  mode: "strict"  # Set to "flexible" for exploratory runs
+  # Set default to flexible on host to allow graceful fallback when some raw columns (e.g., Protocol) are absent.
+  mode: "flexible"  # was "strict" in container; changed due to missing 'Protocol' column in current raw dump
   
   # Imputation strategies
   imputation:
