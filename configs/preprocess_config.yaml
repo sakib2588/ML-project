@@ -1,0 +1,360 @@
+# preprocess_config.yaml
+# Feature engineering and preprocessing configuration
+# Implements canonical feature schema for cross-dataset compatibility
+
+# Canonical Feature Schema
+# This schema defines features that can be derived from both CIC-IDS2017 and TON-IoT
+canonical_features:
+  # Critical features - must be present or derivable
+  critical:
+    - duration_sec
+    - total_packets
+    - total_bytes
+    - protocol
+    - label
+  
+  # Important features - should be present, imputed if missing
+  important:
+    - packets_per_second
+    - bytes_per_second
+    - avg_packet_length
+    - src_port
+    - dst_port
+  
+  # Optional features - nice to have, can be omitted
+  optional:
+    - tcp_flags_count
+    - payload_entropy
+    - forward_packets
+    - backward_packets
+    - flow_iat_mean
+    - flow_iat_std
+
+# Legacy compatibility block for FeatureEngineer (expects 'missing_features')
+missing_features:
+  mode: "flexible"  # mirror missing_values.mode
+  imputation_value: 0.0
+
+# Feature mapping from dataset-specific columns to canonical schema
+feature_mappings:
+  cic_ids_2017:
+    # How to extract/derive each canonical feature from CIC-IDS2017
+    duration_sec:
+      source_column: "Flow Duration"
+      transform: "divide_by_1000000"  # Convert microseconds to seconds
+      fallback: "compute_from_timestamps"
+    
+    total_packets:
+      source_column: "Total Fwd Packets"
+      additional_column: "Total Backward Packets"
+      transform: "sum"  # Sum forward and backward packets
+    
+    total_bytes:
+      source_column: "Total Length of Fwd Packets"
+      additional_column: "Total Length of Bwd Packets"
+      transform: "sum"
+    
+    protocol:
+      source_column: "Protocol"
+      transform: "categorical_encode"
+    
+    packets_per_second:
+      derived: true
+      formula: "total_packets / duration_sec"
+      handle_zero_duration: "set_to_zero"
+    
+    bytes_per_second:
+      derived: true
+      formula: "total_bytes / duration_sec"
+      handle_zero_duration: "set_to_zero"
+    
+    avg_packet_length:
+      derived: true
+      formula: "total_bytes / total_packets"
+      handle_zero_packets: "set_to_zero"
+    
+    src_port:
+      source_column: "Source Port"
+      transform: "port_bucketing"  # Bucket ports into ranges
+    
+    dst_port:
+      source_column: "Destination Port"
+      transform: "port_bucketing"
+    
+    tcp_flags_count:
+      source_columns:
+        - "FIN Flag Count"
+        - "SYN Flag Count"
+        - "RST Flag Count"
+        - "PSH Flag Count"
+        - "ACK Flag Count"
+        - "URG Flag Count"
+      transform: "sum"
+      fallback_value: 0
+    
+    forward_packets:
+      source_column: "Total Fwd Packets"
+      transform: "identity"
+    
+    backward_packets:
+      source_column: "Total Backward Packets"
+      transform: "identity"
+    
+    flow_iat_mean:
+      source_column: "Flow IAT Mean"
+      transform: "identity"
+      fallback_value: -1
+    
+    flow_iat_std:
+      source_column: "Flow IAT Std"
+      transform: "identity"
+      fallback_value: -1
+    
+    label:
+      source_column: "Label"
+      transform: "binary_encode"  # BENIGN -> 0, any attack -> 1
+      attack_labels:  # List of attack types
+        - "DDoS"
+        - "PortScan"
+        - "Bot"
+        - "Infiltration"
+        - "Web Attack"
+        - "Brute Force"
+        - "DoS"
+        - "Heartbleed"
+  
+  ton_iot:
+    # How to extract/derive each canonical feature from TON-IoT
+    duration_sec:
+      source_column: "duration"  # May need to check actual column name
+      transform: "identity"
+      fallback: "compute_from_timestamps"
+    
+    total_packets:
+      source_column: "ts"  # May need aggregation
+      transform: "count_or_aggregate"
+      fallback_value: 1
+    
+    total_bytes:
+      source_column: "bytes"
+      transform: "identity"
+      fallback_value: 0
+    
+    protocol:
+      source_column: "proto"
+      transform: "categorical_encode"
+    
+    packets_per_second:
+      derived: true
+      formula: "total_packets / duration_sec"
+      handle_zero_duration: "set_to_zero"
+    
+    bytes_per_second:
+      derived: true
+      formula: "total_bytes / duration_sec"
+      handle_zero_duration: "set_to_zero"
+    
+    avg_packet_length:
+      derived: true
+      formula: "total_bytes / total_packets"
+      handle_zero_packets: "set_to_zero"
+    
+    src_port:
+      source_column: "src_port"
+      transform: "port_bucketing"
+      fallback_value: "UNKNOWN"
+    
+    dst_port:
+      source_column: "dst_port"
+      transform: "port_bucketing"
+      fallback_value: "UNKNOWN"
+    
+    tcp_flags_count:
+      # Likely missing in TON-IoT
+      missing: true
+      impute_value: 0
+      add_missing_flag: true
+    
+    payload_entropy:
+      # Likely missing in TON-IoT
+      missing: true
+      impute_value: -1
+      add_missing_flag: true
+    
+    label:
+      source_column: "label"
+      transform: "binary_encode"
+      attack_value: 1
+      normal_value: 0
+
+# Feature transformations
+transformations:
+  port_bucketing:
+    # Bucket ports to reduce cardinality
+    buckets:
+      well_known: [0, 1023]      # Well-known ports
+      registered: [1024, 49151]  # Registered ports
+      dynamic: [49152, 65535]    # Dynamic/private ports
+      unknown: null              # For missing values
+  
+  categorical_encode:
+    # Protocol encoding
+    protocol_map:
+      tcp: 6
+      udp: 17
+      icmp: 1
+      other: 255
+    
+    # Handle unknown protocols
+    unknown_value: 255
+  
+  normalization:
+    # Normalization strategy for numerical features
+    method: "standard"  # Options: "standard", "minmax", "robust"
+    
+    # Features to normalize
+    features_to_normalize:
+      - duration_sec
+      - total_packets
+      - total_bytes
+      - packets_per_second
+      - bytes_per_second
+      - avg_packet_length
+    
+    # Fit on training data only
+    fit_on_train_only: true
+
+# Missing value handling
+missing_values:
+  # Strategy: strict or flexible
+  # Set default to flexible on host to allow graceful fallback when some raw columns (e.g., Protocol) are absent.
+  mode: "flexible"  # was "strict" in container; changed due to missing 'Protocol' column in current raw dump
+  
+  # Imputation strategies
+  imputation:
+    numeric:
+      method: "median"  # Options: "mean", "median", "zero"
+      add_missing_flag: true  # Add binary flag indicating imputation
+    
+    categorical:
+      method: "mode"  # Most frequent value
+      unknown_category: "UNKNOWN"
+      add_missing_flag: true
+  
+  # Maximum allowed missing percentage per feature
+  max_missing_percent: 20.0
+  
+  # Action when exceeding threshold
+  on_exceed: "warn"  # Options: "error", "warn", "ignore"
+
+# Windowing configuration (Option A: consecutive flows)
+windowing:
+  # Window parameters
+  window_length: 8  # Number of consecutive flows per window
+  stride: 1  # Overlap: stride=1 for dense windows, stride=W for no overlap
+  
+  # Alternative stride for fast prototyping
+  fast_stride: 4  # Use with --fast-mode flag
+  
+  # Flow grouping strategy
+  grouping:
+    enabled: true
+    group_by: "source_ip"  # Options: "source_ip", "connection_tuple", "time_only"
+    sort_by_timestamp: true
+  
+  # Labeling strategy for windows
+  labeling:
+    method: "any_malicious"  # Window is malicious if ANY flow is malicious
+    # Alternative: "majority_vote", "last_flow", "first_flow"
+    
+    # For imbalanced datasets, option to oversample malicious windows
+    balance_windows: false
+    target_ratio: 0.3  # Target 30% malicious windows if balancing
+  
+  # Minimum flows required to form a window
+  min_flows_per_window: 8  # Must equal window_length for fixed-size
+  
+  # Padding strategy for insufficient flows
+  padding:
+    method: "zero"  # Options: "zero", "repeat_last", "drop"
+    add_padding_flag: true
+
+# Data splitting
+data_split:
+  # Split strategy
+  method: "stratified"  # Maintain label distribution
+  
+  # Split ratios
+  train_ratio: 0.7
+  val_ratio: 0.15
+  test_ratio: 0.15
+  
+  # Random seed for reproducibility
+  random_seed: 42
+  
+  # Ensure chronological split for time-series data
+  chronological: false  # Set true if temporal ordering matters
+
+# Output format
+output:
+  # Format for processed data
+  format: "numpy_memmap"  # Options: "numpy_memmap", "tfrecord", "hdf5"
+  
+  # Compression
+  compress: true
+  compression_level: 6  # 0-9, higher = more compression but slower
+  
+  # Save scaler and encoders for consistent preprocessing
+  save_preprocessors: true
+  preprocessor_path: "data/processed/preprocessors.pkl"
+  
+  # Save preprocessing report
+  generate_report: true
+  report_path: "data/processed/preprocessing_report.json"
+
+# Validation and quality checks
+validation:
+  # Check for data leakage between splits
+  check_leakage: true
+  
+  # Verify feature distributions
+  check_distributions: true
+  distribution_shift_threshold: 0.3  # KL divergence threshold
+  
+  # Verify label balance
+  check_label_balance: true
+  min_class_ratio: 0.01  # At least 1% of samples per class
+  
+  # Outlier detection
+  detect_outliers: true
+  outlier_method: "iqr"  # Options: "iqr", "zscore", "isolation_forest"
+  outlier_threshold: 3.0
+
+# Logging and debugging
+logging:
+  level: "INFO"
+  log_file: "logs/preprocessing.log"
+  
+  # Save intermediate outputs for debugging
+  save_intermediate: false
+  intermediate_dir: "data/intermediate"
+  
+  # Visualizations
+  generate_plots: true
+  plot_dir: "outputs/plots/preprocessing"
+  plots_to_generate:
+    - feature_distributions
+    - correlation_matrix
+    - missing_value_heatmap
+    - label_distribution
+
+# Performance settings
+performance:
+  # Number of parallel workers for preprocessing
+  n_jobs: 4  # Set to number of CPU cores (i3-7100U has 4 threads)
+  
+  # Batch size for processing
+  batch_size: 10000
+  
+  # Memory limit per worker
+  max_memory_per_worker_mb: 2000  # 2GB per worker

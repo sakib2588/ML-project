@@ -1,0 +1,427 @@
+# phase1_config.yaml
+# Main configuration for Phase 1 baseline architecture selection experiments
+
+# Experiment metadata
+experiment:
+  name: "Phase1_Baseline_Architecture_Selection"
+  description: "Validate DS-1D-CNN as optimal student architecture"
+  author: "Your Name"
+  date: "2024"
+  version: "1.0"
+
+# Models to evaluate
+models:
+  mlp:
+    enabled: true
+    architecture:
+      name: "SmallMLP"
+      layers:
+        - type: "dense"
+          units: 128
+          activation: "relu"
+          dropout: 0.3
+        - type: "dense"
+          units: 64
+          activation: "relu"
+          dropout: 0.3
+        - type: "dense"
+          units: 32
+          activation: "relu"
+          dropout: 0.2
+        - type: "dense"
+          units: 2  # Binary classification
+          activation: "softmax"
+      
+      target_params: 50000  # ~50K parameters
+      
+      input_shape: [8, 12]  # [window_length, num_features]
+      flatten_input: true  # MLP requires flattened input
+  
+  ds_1d_cnn:
+    enabled: true
+    architecture:
+      name: "DS_1D_CNN"
+      description: "Depthwise Separable 1D CNN"
+      
+      # Conv blocks
+      conv_blocks:
+        - type: "depthwise_separable_conv1d"
+          filters: 32
+          kernel_size: 3
+          activation: "relu"
+          batch_norm: true
+          dropout: 0.2
+        
+        - type: "depthwise_separable_conv1d"
+          filters: 64
+          kernel_size: 3
+          activation: "relu"
+          batch_norm: true
+          dropout: 0.2
+        
+        - type: "depthwise_separable_conv1d"
+          filters: 64
+          kernel_size: 3
+          activation: "relu"
+          batch_norm: true
+          dropout: 0.3
+      
+      # Global pooling
+      pooling:
+        type: "global_average_pooling1d"
+      
+      # Dense layers
+      dense_layers:
+        - units: 32
+          activation: "relu"
+          dropout: 0.3
+        - units: 2  # Binary classification
+          activation: "softmax"
+      
+      target_params: 80000  # ~80K parameters
+      
+      input_shape: [8, 12]  # [window_length, num_features]
+  
+  lstm:
+    enabled: true
+    architecture:
+      name: "SmallLSTM"
+      
+      # LSTM layers
+      lstm_layers:
+        - units: 64
+          return_sequences: true
+          dropout: 0.2
+          recurrent_dropout: 0.2
+        
+        - units: 32
+          return_sequences: false
+          dropout: 0.2
+          recurrent_dropout: 0.2
+      
+      # Dense layers
+      dense_layers:
+        - units: 32
+          activation: "relu"
+          dropout: 0.3
+        - units: 2  # Binary classification
+          activation: "softmax"
+      
+      target_params: 100000  # ~90-120K parameters
+      
+      input_shape: [8, 12]  # [window_length, num_features]
+
+# Training configuration
+training:
+  # Optimizer
+  optimizer:
+    name: "adam"
+    learning_rate: 0.001
+    beta1: 0.9
+    beta2: 0.999
+    epsilon: 1e-07
+    weight_decay: 0.0001  # L2 regularization
+  
+  # Learning rate schedule
+  lr_schedule:
+    enabled: true
+    type: "reduce_on_plateau"  # Options: "step", "exponential", "cosine", "reduce_on_plateau"
+    factor: 0.5  # Reduce LR by half
+    patience: 5  # Wait 5 epochs before reducing
+    min_lr: 1e-06
+  
+  # Loss function
+  loss:
+    name: "cross_entropy"
+    label_smoothing: 0.1  # Helps with overconfidence
+    class_weights: "auto"  # Compute from training data
+  
+  # Training parameters
+  epochs: 50
+  batch_size: 64  # Conservative for CPU training
+  
+  # Early stopping
+  early_stopping:
+    enabled: true
+    monitor: "val_f1_macro"  # Stop based on F1 score
+    patience: 10
+    min_delta: 0.001  # Minimum improvement to count as progress
+    mode: "max"  # F1 should be maximized
+  
+  # Model checkpointing
+  checkpointing:
+    enabled: true
+    save_best_only: true
+    monitor: "val_f1_macro"
+    mode: "max"
+    save_frequency: "epoch"
+  
+  # Gradient clipping (helps with LSTM training)
+  gradient_clip:
+    enabled: true
+    max_norm: 1.0
+  
+  # Mixed precision training (if GPU available)
+  mixed_precision: false  # Set true if you have GPU
+  
+  # Validation during training
+  validation:
+    frequency: 1  # Validate every epoch
+    verbose: true
+
+# Evaluation metrics
+evaluation:
+  metrics:
+    # Classification metrics
+    - name: "accuracy"
+      primary: false
+    
+    - name: "f1_macro"
+      primary: true  # Main metric for model selection
+    
+    - name: "f1_weighted"
+      primary: false
+    
+    - name: "precision_macro"
+      primary: false
+    
+    - name: "recall_macro"
+      primary: false
+    
+    - name: "per_class_recall"
+      primary: false
+      classes: ["benign", "attack"]
+    
+    # Model efficiency metrics
+    - name: "parameter_count"
+      primary: true
+    
+    - name: "flops"
+      primary: true
+    
+    - name: "model_size_mb"
+      primary: false
+    
+    # Inference time metrics
+    - name: "cpu_inference_time_ms"
+      primary: true
+      num_runs: 100  # Average over 100 runs
+      warmup_runs: 10  # Discard first 10 runs
+      batch_size: 1  # Measure single-sample inference
+    
+    - name: "cpu_throughput_samples_per_sec"
+      primary: false
+      batch_size: 32
+    
+    # Training time
+    - name: "training_time_minutes"
+      primary: true
+  
+  # Confusion matrix
+  confusion_matrix:
+    enabled: true
+    normalize: "true"  # Show as percentages
+  
+  # ROC curve and AUC
+  roc_curve:
+    enabled: true
+    
+  # Precision-Recall curve
+  pr_curve:
+    enabled: true
+
+# Cross-dataset validation
+cross_dataset_validation:
+  enabled: true
+  
+  # Experiments to run
+  experiments:
+    - name: "CIC_to_TON"
+      train_dataset: "cic_ids_2017"
+      test_dataset: "ton_iot"
+      description: "Train on CIC-IDS2017, evaluate on TON-IoT"
+    
+    - name: "TON_to_CIC"
+      train_dataset: "ton_iot"
+      test_dataset: "cic_ids_2017"
+      description: "Train on TON-IoT, evaluate on CIC-IDS2017"
+      optional: true  # Run only if time permits
+  
+  # Report cross-dataset performance drop
+  report_performance_drop: true
+
+# Decision criteria for architecture selection
+decision_criteria:
+  # DS-1D-CNN must meet these thresholds to be selected
+  
+  accuracy_threshold:
+    requirement: "within_2_percent_of_best"
+    description: "Accuracy within 2% of best model"
+  
+  parameter_threshold:
+    max_params: 150000
+    description: "Parameters < 150K (leaves room for compression)"
+  
+  inference_time_threshold:
+    requirement: "within_2x_of_fastest"
+    description: "Inference time competitive (within 2× of fastest)"
+  
+  # Additional considerations
+  training_time_weight: 0.2  # 20% weight in final score
+  cross_dataset_robustness_weight: 0.3  # 30% weight
+  
+  # Automatic decision
+  auto_select: true
+  fallback_if_fails: "lstm"  # If DS-1D-CNN fails criteria
+
+# Experiment modes
+modes:
+  quick:
+    description: "Quick prototyping with sampled data"
+    data_samples: 100000
+    epochs: 20
+    validation_frequency: 2
+    early_stopping_patience: 5
+  
+  medium:
+    description: "Medium validation with more data"
+    data_samples: 250000
+    epochs: 35
+    validation_frequency: 1
+    early_stopping_patience: 7
+  
+  full:
+    description: "Full dataset training (overnight)"
+    data_samples: null  # Use full dataset
+    epochs: 50
+    validation_frequency: 1
+    early_stopping_patience: 10
+
+# Reproducibility
+reproducibility:
+  random_seed: 42
+  deterministic: true  # Use deterministic algorithms where possible
+  cudnn_benchmark: false  # Disable for reproducibility (if GPU)
+
+# Resource management
+resources:
+  # CPU settings
+  num_workers: 4  # i3-7100U has 4 threads
+  pin_memory: false  # Only useful with GPU
+  
+  # Memory management
+  max_memory_gb: 8.0
+  prefetch_factor: 2
+  
+  # Garbage collection
+  gc_collect_frequency: 5  # Collect every 5 epochs
+
+# Logging and outputs
+logging:
+  level: "INFO"
+  
+  # Console logging
+  console:
+    enabled: true
+    use_colors: true
+    show_progress_bar: true
+  
+  # File logging
+  file:
+    enabled: true
+    log_dir: "logs"
+    log_file: "phase1_{timestamp}.log"
+  
+  # TensorBoard logging
+  tensorboard:
+    enabled: true
+    log_dir: "runs/phase1"
+  
+  # Experiment tracking
+  mlflow:
+    enabled: false  # Set true if you want MLflow tracking
+    tracking_uri: "mlruns"
+    experiment_name: "Phase1_Baselines"
+
+# Outputs
+outputs:
+  # Base directory for experiment outputs
+  output_dir: "experiments/phase1_{timestamp}"
+  
+  # Subdirectories
+  models_dir: "models"
+  plots_dir: "plots"
+  reports_dir: "reports"
+  logs_dir: "logs"
+  
+  # Save intermediate results
+  save_train_predictions: false
+  save_val_predictions: true
+  save_test_predictions: true
+  
+  # Generate comprehensive report
+  generate_final_report: true
+  report_format: ["json", "pdf", "html"]
+  
+  # Save trained models
+  save_models: true
+  model_format: "pytorch"  # .pth file
+
+# Visualization
+visualization:
+  # Training curves
+  training_curves:
+    enabled: true
+    metrics: ["loss", "accuracy", "f1_macro"]
+    smoothing: 0.6  # Exponential moving average smoothing
+  
+  # Architecture diagrams
+  architecture_diagrams:
+    enabled: true
+    format: "png"
+  
+  # Comparison plots
+  comparison_plots:
+    enabled: true
+    plots:
+      - "accuracy_comparison"
+      - "parameter_efficiency"  # Accuracy vs parameters
+      - "inference_time_comparison"
+      - "training_time_comparison"
+      - "cross_dataset_robustness"
+  
+  # Style
+  plot_style: "seaborn"
+  figure_size: [10, 6]
+  dpi: 300
+
+# Red flags to watch (automated checks)
+red_flags:
+  check_enabled: true
+  
+  checks:
+    - name: "mlp_outperforms_ds_cnn"
+      condition: "mlp_accuracy > ds_cnn_accuracy + 0.02"
+      warning: "MLP outperforms DS-1D-CNN - features may be over-aggregated"
+      action: "flag_for_review"
+    
+    - name: "poor_cross_dataset_performance"
+      condition: "cross_dataset_drop > 0.15"
+      warning: "Large performance drop on cross-dataset validation"
+      action: "flag_for_review"
+    
+    - name: "excessive_parameters"
+      condition: "ds_cnn_params > 150000"
+      warning: "DS-1D-CNN has too many parameters for compression"
+      action: "suggest_architecture_reduction"
+    
+    - name: "slow_inference"
+      condition: "ds_cnn_inference_time > 2 * fastest_inference_time"
+      warning: "DS-1D-CNN inference too slow for edge deployment"
+      action: "suggest_optimization"
+
+# Notifications (optional)
+notifications:
+  enabled: false
+  email: "your-email@example.com"
+  notify_on: ["completion", "error", "red_flag"]
