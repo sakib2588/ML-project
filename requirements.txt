@@ -3,7 +3,7 @@ pandas
 scikit-learn
 matplotlib
 seaborn
-tensorflow==2.11.0
+tensorflow>=2.20.0
 tensorflow-model-optimization
 torch
 torchvision
@@ -13,3 +13,4 @@ tensorboard
 tqdm
 pyyaml
 psutil
+joblib
