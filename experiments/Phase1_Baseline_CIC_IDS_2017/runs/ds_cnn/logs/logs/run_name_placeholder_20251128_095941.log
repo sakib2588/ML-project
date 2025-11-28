@@ -1,0 +1,31 @@
+2025-11-28 15:59:41,082 - run_name_placeholder - INFO - main_phase1.py:212 - Starting run for model ds_cnn in experiments\Phase1_Baseline_CIC_IDS_2017\runs\ds_cnn
+2025-11-28 15:59:44,736 - run_name_placeholder - INFO - trainer.py:177 - Optimizer: adamw lr=0.001 wd=0.02
+2025-11-28 15:59:44,737 - run_name_placeholder - INFO - trainer.py:201 - Criterion: crossentropy
+2025-11-28 15:59:44,737 - run_name_placeholder - INFO - trainer.py:217 - EarlyStopping enabled
+2025-11-28 15:59:44,737 - run_name_placeholder - INFO - trainer.py:234 - ModelCheckpoint enabled. save_last=True
+2025-11-28 15:59:44,738 - run_name_placeholder - INFO - trainer.py:257 - LR scheduler ReduceLROnPlateau wrapped
+2025-11-28 15:59:44,738 - run_name_placeholder - INFO - trainer.py:281 - Trainer initialized on device cpu
+2025-11-28 15:59:44,738 - run_name_placeholder - INFO - trainer.py:527 - Training DS_1D_CNN for 20 epochs on cpu
+2025-11-28 16:05:38,672 - run_name_placeholder - INFO - trainer.py:572 - Epoch 1/20 - train_loss: 0.5174, val_loss: 1.3332, train_acc: 0.8009, val_acc: 0.5270, val_f1: 0.4578, lr: 0.001
+2025-11-28 16:05:38,714 - run_name_placeholder - INFO - callbacks.py:325 - ModelCheckpoint: saved best checkpoint to experiments\Phase1_Baseline_CIC_IDS_2017\runs\ds_cnn\checkpoints\best_model_epoch1_f10.4578.pth
+2025-11-28 16:09:44,326 - run_name_placeholder - INFO - trainer.py:572 - Epoch 2/20 - train_loss: 0.4816, val_loss: 1.7223, train_acc: 0.8264, val_acc: 0.5488, val_f1: 0.4256, lr: 0.001
+2025-11-28 16:13:41,225 - run_name_placeholder - INFO - trainer.py:572 - Epoch 3/20 - train_loss: 0.4706, val_loss: 1.5019, train_acc: 0.8328, val_acc: 0.5217, val_f1: 0.4135, lr: 0.001
+2025-11-28 16:17:44,359 - run_name_placeholder - INFO - trainer.py:572 - Epoch 4/20 - train_loss: 0.4637, val_loss: 1.3980, train_acc: 0.8367, val_acc: 0.2892, val_f1: 0.2758, lr: 0.001
+2025-11-28 16:21:46,258 - run_name_placeholder - INFO - trainer.py:572 - Epoch 5/20 - train_loss: 0.4563, val_loss: 1.5252, train_acc: 0.8411, val_acc: 0.2754, val_f1: 0.2656, lr: 0.0005
+2025-11-28 16:25:40,150 - run_name_placeholder - INFO - trainer.py:572 - Epoch 6/20 - train_loss: 0.4442, val_loss: 1.7702, train_acc: 0.8481, val_acc: 0.2640, val_f1: 0.2507, lr: 0.0005
+2025-11-28 16:29:45,901 - run_name_placeholder - INFO - trainer.py:572 - Epoch 7/20 - train_loss: 0.4403, val_loss: 1.5459, train_acc: 0.8507, val_acc: 0.2838, val_f1: 0.2761, lr: 0.0005
+2025-11-28 16:33:59,645 - run_name_placeholder - INFO - trainer.py:572 - Epoch 8/20 - train_loss: 0.4376, val_loss: 1.2837, train_acc: 0.8523, val_acc: 0.3101, val_f1: 0.3080, lr: 0.0005
+2025-11-28 16:33:59,658 - run_name_placeholder - INFO - callbacks.py:130 - EarlyStopping: triggered after 7 epochs without improvement.
+2025-11-28 16:33:59,658 - run_name_placeholder - INFO - trainer.py:622 - EarlyStopping triggered at epoch 8
+2025-11-28 16:33:59,659 - run_name_placeholder - INFO - trainer.py:630 - Training finished in 34.25 minutes
+2025-11-28 16:33:59,680 - run_name_placeholder - INFO - trainer.py:634 - Saved metric logs.
+2025-11-28 16:33:59,681 - run_name_placeholder - WARNING - trainer.py:644 - Failed to restore best checkpoint: Best checkpoint not found: None
+2025-11-28 16:33:59,687 - run_name_placeholder - INFO - trainer.py:650 - Saved final model to experiments\Phase1_Baseline_CIC_IDS_2017\runs\ds_cnn\checkpoints\final_model.pth
+2025-11-28 16:33:59,690 - run_name_placeholder - INFO - evaluator.py:74 - Starting model evaluation...
+2025-11-28 16:34:18,693 - run_name_placeholder - INFO - evaluator.py:145 - Evaluation complete. Accuracy: 0.4374, F1 Macro: 0.4248
+2025-11-28 16:34:18,697 - run_name_placeholder - INFO - main_phase1.py:270 - Completed model ds_cnn. Results saved to experiments\Phase1_Baseline_CIC_IDS_2017\runs\ds_cnn\results.json
+2025-11-28 16:34:18,698 - run_name_placeholder - INFO - logging_utils.py:195 - ======================================================================
+2025-11-28 16:34:18,698 - run_name_placeholder - INFO - logging_utils.py:195 - Generating comparison plots
+2025-11-28 16:34:18,699 - run_name_placeholder - INFO - logging_utils.py:195 - ======================================================================
+2025-11-28 16:34:21,545 - run_name_placeholder - INFO - logging_utils.py:195 - Saved minimal decision report to experiments\Phase1_Baseline_CIC_IDS_2017\decision_report_minimal.json
+2025-11-28 16:34:21,545 - run_name_placeholder - INFO - logging_utils.py:195 - Experiment complete. Artifacts saved to: experiments\Phase1_Baseline_CIC_IDS_2017

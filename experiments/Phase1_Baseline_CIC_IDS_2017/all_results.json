@@ -1,0 +1,71 @@
+{
+  "ds_cnn": {
+    "accuracy": 0.4374395025965309,
+    "f1_macro": 0.42484636478511584,
+    "f1_weighted": 0.46292482741025415,
+    "precision_macro": 0.4706550650613759,
+    "recall_macro": 0.46415208731375523,
+    "confusion_matrix": [
+      [
+        124284,
+        183008
+      ],
+      [
+        55858,
+        61455
+      ]
+    ],
+    "per_class_metrics": {
+      "0": {
+        "precision": 0.6899223945554063,
+        "recall": 0.4044491883941007,
+        "f1-score": 0.5099521165942466,
+        "support": 307292.0
+      },
+      "1": {
+        "precision": 0.25138773556734556,
+        "recall": 0.5238549862334098,
+        "f1-score": 0.3397406129759851,
+        "support": 117313.0
+      },
+      "accuracy": 0.4374395025965309,
+      "macro avg": {
+        "precision": 0.4706550650613759,
+        "recall": 0.46415208731375523,
+        "f1-score": 0.42484636478511584,
+        "support": 424605.0
+      },
+      "weighted avg": {
+        "precision": 0.5687608056672246,
+        "recall": 0.4374395025965309,
+        "f1-score": 0.46292482741025415,
+        "support": 424605.0
+      }
+    },
+    "parameters": 11322,
+    "model_size_mb": 0.04443359375,
+    "flops": 0,
+    "flops_str": "N/A (thop not installed)",
+    "params": 11322,
+    "params_str": "11,322",
+    "inference_time_ms": {
+      "mean_ms": 0.7799159998830874,
+      "std_ms": 0.1286478251110475,
+      "min_ms": 0.6614000012632459,
+      "max_ms": 1.1901999969268218,
+      "median_ms": 0.7275999996636529,
+      "num_runs": 50
+    },
+    "throughput_samples_per_sec": 1405.5011315116785,
+    "total_samples": 10,
+    "elapsed_s": 0.007114899999578483,
+    "model_name": "ds_cnn",
+    "training_epochs": 8,
+    "input_shape": [
+      1,
+      15,
+      8
+    ],
+    "timestamp": "20251128_163418"
+  }
+}

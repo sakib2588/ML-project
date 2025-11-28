@@ -196,6 +196,43 @@ class Trainer:
                 self.criterion = nn.CrossEntropyLoss()
         elif loss_name in ("mse", "mse_loss", "mean_squared_error"):
             self.criterion = nn.MSELoss()
+        elif loss_name in ("focal", "focal_loss", "focalloss"):
+            # Focal Loss for handling class imbalance
+            try:
+                from .focal_loss import FocalLoss
+                alpha = loss_cfg.get("alpha", 0.25)
+                gamma = loss_cfg.get("gamma", 2.0)
+                num_classes = self.config.get("num_classes", 2)
+                self.criterion = FocalLoss(alpha=alpha, gamma=gamma, num_classes=num_classes)
+                self.logger_std.info(f"Using Focal Loss with alpha={alpha}, gamma={gamma}")
+            except ImportError:
+                self.logger_std.warning("Focal Loss not available, falling back to CrossEntropyLoss")
+                self.criterion = nn.CrossEntropyLoss()
+        elif loss_name in ("weighted_focal", "weighted_focal_loss"):
+            # Weighted Focal Loss with automatic class weight computation
+            try:
+                from .focal_loss import WeightedFocalLoss
+                class_counts = loss_cfg.get("class_counts", None)
+                gamma = loss_cfg.get("gamma", 2.0)
+                self.criterion = WeightedFocalLoss(class_counts=class_counts, gamma=gamma)
+                self.logger_std.info(f"Using Weighted Focal Loss with gamma={gamma}")
+            except ImportError:
+                self.logger_std.warning("Weighted Focal Loss not available, falling back to CrossEntropyLoss")
+                self.criterion = nn.CrossEntropyLoss()
+        elif loss_name in ("class_balanced", "class_balanced_loss"):
+            # Class-Balanced Loss based on effective number of samples
+            try:
+                from .focal_loss import ClassBalancedLoss
+                class_counts = loss_cfg.get("class_counts", None)
+                gamma = loss_cfg.get("gamma", 2.0)
+                beta = loss_cfg.get("beta", 0.9999)
+                if class_counts is None:
+                    raise ValueError("class_counts required for class_balanced loss")
+                self.criterion = ClassBalancedLoss(class_counts=class_counts, gamma=gamma, beta=beta)
+                self.logger_std.info(f"Using Class-Balanced Loss with gamma={gamma}, beta={beta}")
+            except ImportError:
+                self.logger_std.warning("Class-Balanced Loss not available, falling back to CrossEntropyLoss")
+                self.criterion = nn.CrossEntropyLoss()
         else:
             raise ValueError(f"Unsupported loss: {loss_name}")
         self.logger_std.info(f"Criterion: {loss_name}")

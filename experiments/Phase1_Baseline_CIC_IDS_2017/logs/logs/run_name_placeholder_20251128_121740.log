@@ -1,0 +1,9 @@
+2025-11-28 18:17:40,635 - run_name_placeholder - INFO - logging_utils.py:195 - ======================================================================
+2025-11-28 18:17:40,635 - run_name_placeholder - INFO - logging_utils.py:195 - Starting Phase1 experiment: Phase1_Baseline_CIC_IDS_2017
+2025-11-28 18:17:40,635 - run_name_placeholder - INFO - logging_utils.py:195 - ======================================================================
+2025-11-28 18:17:40,636 - run_name_placeholder - INFO - logging_utils.py:195 - Experiment directory: experiments\Phase1_Baseline_CIC_IDS_2017
+2025-11-28 18:17:40,636 - run_name_placeholder - INFO - logging_utils.py:195 - Seed: 42
+2025-11-28 18:17:40,802 - run_name_placeholder - INFO - logging_utils.py:195 - Creating data loaders...
+2025-11-28 18:17:48,341 - run_name_placeholder - INFO - logging_utils.py:195 - ======================================================================
+2025-11-28 18:17:48,342 - run_name_placeholder - INFO - logging_utils.py:195 - Training model: mlp
+2025-11-28 18:17:48,342 - run_name_placeholder - INFO - logging_utils.py:195 - ======================================================================

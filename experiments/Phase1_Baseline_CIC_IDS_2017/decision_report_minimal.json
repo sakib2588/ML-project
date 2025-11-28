@@ -1,0 +1,13 @@
+{
+  "experiment": "experiments\\Phase1_Baseline_CIC_IDS_2017",
+  "timestamp": "20251128_155940",
+  "models": [
+    "ds_cnn"
+  ],
+  "summary": {
+    "ds_cnn": {
+      "accuracy": 0.4374395025965309,
+      "f1_macro": 0.42484636478511584
+    }
+  }
+}

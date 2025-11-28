@@ -789,5 +789,106 @@ The recommendations in this document are grounded in peer-reviewed research and 
 
 ---
 
+## AI Scientist Recommendations (Code Quality)
+
+The following recommendations address practical code fixes identified during project setup and testing on Windows.
+
+### 7.1 Enable YAML Config File Loading
+
+**Problem**: The `--config` CLI argument exists but is never used. The config is hardcoded in `main_phase1.py` (lines 429-520), making experiments less reproducible and harder to tweak.
+
+**Current State**:
+```python
+import yaml  # Imported but unused!
+
+parser.add_argument('--config', default='configs/phase1_config.yaml')
+# ... but then config is built inline, ignoring the YAML file
+```
+
+**Recommended Implementation**:
+```python
+# Load base config from YAML file, then override with CLI args
+config_path = Path(args.config)
+if config_path.exists():
+    with open(config_path, 'r') as f:
+        config = yaml.safe_load(f)
+    print(f"✓ Loaded config from {config_path}")
+else:
+    print(f"⚠ Config file not found: {config_path}, using defaults")
+    config = {}
+
+# Override with CLI arguments
+if args.models:
+    config["models"] = args.models
+if args.quick:
+    config.setdefault("training", {})["epochs"] = 10
+```
+
+**Benefits**:
+- Experiments become fully reproducible via config files
+- No code changes needed to try different hyperparameters
+- Config files can be version-controlled with experiment results
+- Enables automated hyperparameter sweeps (see Section 3.3)
+
+---
+
+### 7.2 Add GPU Detection & System Info Logging
+
+**Problem**: No visibility into hardware being used, making it hard to compare training times across machines.
+
+**Recommended Addition** (at experiment start):
+```python
+# System info logging
+device = "cuda" if torch.cuda.is_available() else "cpu"
+print(f"🖥️  Device: {device}")
+if device == "cuda":
+    print(f"   GPU: {torch.cuda.get_device_name(0)}")
+    print(f"   VRAM: {torch.cuda.get_device_properties(0).total_memory / 1e9:.1f} GB")
+else:
+    import psutil
+    print(f"   CPU: {psutil.cpu_count()} cores")
+    print(f"   RAM: {psutil.virtual_memory().total / 1e9:.1f} GB")
+```
+
+**Benefits**:
+- Results are contextualized with hardware info
+- Easier to debug performance issues
+- Facilitates fair comparisons across runs
+
+---
+
+### 7.3 Windows-Specific: DataLoader num_workers Fix
+
+**Problem**: On Windows, `num_workers > 0` in PyTorch DataLoader can cause the script to hang indefinitely due to multiprocessing issues.
+
+**Fix Applied**:
+```python
+# In main_phase1.py config
+"num_workers": 0,   # Use 0 on Windows to avoid multiprocessing freeze
+```
+
+**Note**: On Linux/macOS, `num_workers=2-4` is recommended for faster data loading.
+
+---
+
+### Cross-Reference to Existing Recommendations
+
+The following topics are already covered in detail elsewhere in this document:
+
+| Topic | See Section |
+|-------|-------------|
+| Dynamic class weight calculation | Section 1.2 |
+| MLflow/W&B experiment tracking | Section 6.1 |
+| K-Fold cross-validation | Section 3.1 |
+| Optuna hyperparameter tuning | Section 3.3 |
+| Model ensembling | Section 2.3 |
+
+---
+
+*AI Scientist recommendations added: November 2025*
+*Based on analysis during project setup and testing*
+
+---
+
 *Document created: November 2025*
 *Based on analysis of IDS Compression Project codebase*

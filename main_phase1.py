@@ -434,7 +434,7 @@ if __name__ == "__main__":
             "val_path": str(data_base / "val"),
             "test_path": str(data_base / "test"),
             "batch_size": 128,  # Reduced for CPU memory
-            "num_workers": 2,   # Fewer workers to save memory
+            "num_workers": 0,   # Use 0 on Windows to avoid multiprocessing freeze
             "mode": "memmap",
             "return_dict": True,
         },
@@ -475,9 +475,10 @@ if __name__ == "__main__":
             "weight_decay": 0.02  # Stronger regularization
         },
         "loss": {
-            "name": "crossentropy",
-            # Class weights to handle imbalanced data (82% normal, 18% attack)
-            # More aggressive weighting to force model to learn minority class
+            "name": "focal",  # Use Focal Loss for better handling of class imbalance
+            "alpha": 0.75,    # Higher alpha = more weight on minority class (attacks)
+            "gamma": 2.0,     # Focusing parameter - down-weight easy examples
+            # Legacy class weights (used if Focal Loss unavailable)
             "class_weights": [1.0, 5.0]  # Give 5x weight to attack class
         },
         "callbacks": {
@@ -547,11 +548,12 @@ if __name__ == "__main__":
                 f1 = metrics.get('f1_macro', 0) * 100
                 params = metrics.get('parameters', metrics.get('params', 0))
                 
-                inf_time = metrics.get('inference_time_mean_ms', 'N/A')
+                # Handle nested inference_time_ms dict
+                inf_time = metrics.get('inference_time_ms', metrics.get('inference_time_mean_ms', 'N/A'))
                 if isinstance(inf_time, dict):
                     inf_time = inf_time.get('mean_ms', 'N/A')
                 if isinstance(inf_time, (int, float)):
-                    inf_time = f"{inf_time:.2f}"
+                    inf_time = f"{inf_time:.3f}"
                 
                 print(f"{model_name:<15} {accuracy:>10.2f}%  {f1:>10.2f}%  {params:>10}  {inf_time:>13}")
             

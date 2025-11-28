@@ -1,0 +1,103 @@
+{
+  "experiment_name": "Phase1_Baseline_CIC_IDS_2017",
+  "data": {
+    "train_path": "data\\processed\\cic_ids_2017\\train",
+    "val_path": "data\\processed\\cic_ids_2017\\val",
+    "test_path": "data\\processed\\cic_ids_2017\\test",
+    "batch_size": 128,
+    "num_workers": 0,
+    "mode": "memmap",
+    "return_dict": true
+  },
+  "models": [
+    "mlp"
+  ],
+  "model_defaults": {
+    "mlp": {
+      "hidden_sizes": [
+        128,
+        64,
+        32
+      ],
+      "dropout_rate": 0.5,
+      "activation": "relu",
+      "use_batchnorm": true,
+      "flatten_input": true
+    },
+    "ds_cnn": {
+      "conv_channels": [
+        32,
+        64,
+        64
+      ],
+      "kernel_size": 3,
+      "dropout_rate": 0.4,
+      "use_bn": true,
+      "activation": "relu",
+      "classifier_hidden": 64
+    },
+    "lstm": {
+      "hidden_size": 64,
+      "num_layers": 2,
+      "dropout": 0.4,
+      "bidirectional": false
+    }
+  },
+  "num_classes": 2,
+  "training": {
+    "epochs": 20,
+    "gradient_accumulation_steps": 1,
+    "max_grad_norm": 1.0,
+    "use_amp": false
+  },
+  "optimizer": {
+    "name": "adamw",
+    "learning_rate": 0.001,
+    "weight_decay": 0.02
+  },
+  "loss": {
+    "name": "focal",
+    "alpha": 0.75,
+    "gamma": 2.0,
+    "class_weights": [
+      1.0,
+      5.0
+    ]
+  },
+  "callbacks": {
+    "early_stopping": {
+      "enabled": true,
+      "patience": 7,
+      "min_delta": 0.0005,
+      "monitor": "val_f1_macro",
+      "mode": "max"
+    },
+    "model_checkpoint": {
+      "enabled": true,
+      "monitor": "val_f1_macro",
+      "mode": "max",
+      "save_best_only": true,
+      "save_weights_only": true,
+      "filename": "best_model_epoch{epoch}_f1{metric:.4f}.pth",
+      "save_last": true
+    },
+    "lr_scheduler": {
+      "enabled": true,
+      "name": "ReduceLROnPlateau",
+      "mode": "min",
+      "factor": 0.5,
+      "patience": 3,
+      "monitor": "val_loss"
+    }
+  },
+  "report_metrics": [
+    "accuracy",
+    "f1_macro",
+    "f1_weighted",
+    "precision_macro",
+    "recall_macro",
+    "parameters",
+    "flops",
+    "inference_time_mean_ms"
+  ]
+}
