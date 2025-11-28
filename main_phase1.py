@@ -67,7 +67,7 @@ def _model_factory(model_name: str, input_shape: Tuple[int, int], num_classes: i
     """
     mn = model_name.lower()
     if mn in ("mlp", "mlpp"):
-        from src.models.mlpp import SmallMLP  # type: ignore
+        from src.models.mlp import SmallMLP  # type: ignore
         return SmallMLP(input_shape=input_shape, num_classes=num_classes, **kwargs)
     if mn in ("ds_cnn", "dscnn", "ds-1d-cnn"):
         from src.models.ds_cnn import DS_1D_CNN  # type: ignore
@@ -433,24 +433,24 @@ if __name__ == "__main__":
             "train_path": str(data_base / "train"),
             "val_path": str(data_base / "val"),
             "test_path": str(data_base / "test"),
-            "batch_size": 64,
-            "num_workers": 4,
+            "batch_size": 128,  # Reduced for CPU memory
+            "num_workers": 2,   # Fewer workers to save memory
             "mode": "memmap",
             "return_dict": True,
         },
         "models": args.models or ["mlp", "ds_cnn", "lstm"],
         "model_defaults": {
             "mlp": {
-                "hidden_sizes": (128, 64, 32),
-                "dropout_rate": 0.3,
+                "hidden_sizes": (128, 64, 32),  # Smaller to reduce overfitting
+                "dropout_rate": 0.5,  # Higher dropout for regularization
                 "activation": "relu",
                 "use_batchnorm": True,
                 "flatten_input": True
             },
             "ds_cnn": {
-                "conv_channels": (32, 64, 64),
+                "conv_channels": (32, 64, 64),  # Reduced - was too large for 8 input features
                 "kernel_size": 3,
-                "dropout_rate": 0.2,
+                "dropout_rate": 0.4,  # Increased dropout
                 "use_bn": True,
                 "activation": "relu",
                 "classifier_hidden": 64
@@ -458,40 +458,43 @@ if __name__ == "__main__":
             "lstm": {
                 "hidden_size": 64,
                 "num_layers": 2,
-                "dropout": 0.2,
+                "dropout": 0.4,  # Increased dropout
                 "bidirectional": False
             }
         },
         "num_classes": 2,
         "training": {
-            "epochs": 10 if args.quick else 50,
+            "epochs": 20 if args.quick else 50,  # More epochs for better convergence
             "gradient_accumulation_steps": 1,
             "max_grad_norm": 1.0,
             "use_amp": False
         },
         "optimizer": {
-            "name": "adam",
-            "learning_rate": 0.001,
-            "weight_decay": 0.0001
+            "name": "adamw",
+            "learning_rate": 0.001,  # Lower LR for stability
+            "weight_decay": 0.02  # Stronger regularization
         },
         "loss": {
-            "name": "crossentropy"
+            "name": "crossentropy",
+            # Class weights to handle imbalanced data (82% normal, 18% attack)
+            # More aggressive weighting to force model to learn minority class
+            "class_weights": [1.0, 5.0]  # Give 5x weight to attack class
         },
         "callbacks": {
             "early_stopping": {
                 "enabled": True,
-                "patience": 5 if args.quick else 10,
-                "min_delta": 0.001,
-                "monitor": "val_loss",
-                "mode": "min"
+                "patience": 7 if args.quick else 12,  # More patience to find better optima
+                "min_delta": 0.0005,  # Smaller delta for finer improvements
+                "monitor": "val_f1_macro",  # Monitor F1-macro for imbalanced data
+                "mode": "max"  # Higher F1 is better
             },
             "model_checkpoint": {
                 "enabled": True,
-                "monitor": "val_loss",
-                "mode": "min",
+                "monitor": "val_f1_macro",  # Save best F1 model
+                "mode": "max",
                 "save_best_only": True,
                 "save_weights_only": True,
-                "filename": "best_model_epoch{epoch}_loss{metric:.4f}.pth",
+                "filename": "best_model_epoch{epoch}_f1{metric:.4f}.pth",
                 "save_last": True
             },
             "lr_scheduler": {
@@ -500,7 +503,7 @@ if __name__ == "__main__":
                 "mode": "min",
                 "factor": 0.5,
                 "patience": 3,
-                "monitor": "val_loss"
+                "monitor": "val_loss"  # LR scheduler still on loss is fine
             }
         },
         "report_metrics": [
