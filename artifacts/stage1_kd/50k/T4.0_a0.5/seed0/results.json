@@ -1,0 +1,28 @@
+{
+  "params_target": 50000,
+  "actual_params": 56430,
+  "teacher_params": 13902,
+  "compression": 0.24635832004253058,
+  "seed": 0,
+  "temperature": 4.0,
+  "alpha": 0.5,
+  "best_epoch": 3,
+  "test_metrics": {
+    "binary_acc": 94.68054289691035,
+    "f1_macro": 73.08827520942992,
+    "far": 5.6635494378480615,
+    "per_class_recall": {
+      "DoS slowloris": 79.62962962962963,
+      "Bot": 38.095238095238095,
+      "PortScan": 99.87663459166049,
+      "DDoS": 97.76432231020028,
+      "DoS Slowhttptest": 95.71984435797665,
+      "BENIGN": 94.33645056215194,
+      "DoS GoldenEye": 82.6923076923077,
+      "DoS Hulk": 97.10968173084954,
+      "FTP-Patator": 99.02912621359224,
+      "SSH-Patator": 77.77777777777779
+    }
+  },
+  "constraints_met": 0.0
+}

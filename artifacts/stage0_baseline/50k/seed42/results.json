@@ -1,0 +1,38 @@
+{
+  "params_target": 50000,
+  "actual_params": 56430,
+  "seed": 42,
+  "best_epoch": 12,
+  "test_metrics": {
+    "binary_acc": 97.3886686873397,
+    "f1_macro": 69.06126598529443,
+    "far": 1.577878182900774,
+    "per_class_recall": {
+      "BENIGN": 98.42212181709922,
+      "Bot": 33.33333333333333,
+      "DDoS": 94.78341872380065,
+      "DoS GoldenEye": 98.07692307692307,
+      "DoS Hulk": 92.83267897418762,
+      "DoS Slowhttptest": 95.71984435797665,
+      "DoS slowloris": 88.51851851851852,
+      "FTP-Patator": 100.0,
+      "PortScan": 99.93831729583025,
+      "SSH-Patator": 44.44444444444444
+    }
+  },
+  "constraints_met": 0.0,
+  "model_config": {
+    "input_shape": [
+      15,
+      65
+    ],
+    "conv_channels": [
+      64,
+      128,
+      128
+    ],
+    "classifier_hidden": 128,
+    "num_attack_types": 10,
+    "use_se": true
+  }
+}
