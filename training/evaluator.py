@@ -79,7 +79,27 @@ class ModelEvaluator:
             loader_iter = getattr(self.logger, 'progress_bar')(self.test_loader, desc="Evaluating")
 
         with torch.no_grad():
-            for data, target in loader_iter:
+            for batch in loader_iter:
+                # Handle both dict and tuple formats
+                if isinstance(batch, dict):
+                    if "x" in batch:
+                        data = batch["x"]
+                    elif "inputs" in batch:
+                        data = batch["inputs"]
+                    else:
+                        raise ValueError(f"Dict batch missing 'x' or 'inputs' key: {batch.keys()}")
+                    
+                    if "y" in batch:
+                        target = batch["y"]
+                    elif "labels" in batch:
+                        target = batch["labels"]
+                    else:
+                        raise ValueError(f"Dict batch missing 'y' or 'labels' key: {batch.keys()}")
+                elif isinstance(batch, (list, tuple)) and len(batch) >= 2:
+                    data, target = batch[0], batch[1]
+                else:
+                    raise ValueError(f"Unsupported batch type: {type(batch)}")
+                
                 data, target = data.to(self.device), target.to(self.device)
                 output = self.model(data)
                 _, predicted = output.max(1)

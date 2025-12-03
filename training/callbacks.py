@@ -280,7 +280,11 @@ class ModelCheckpoint:
         Returns:
             Tuple[best_path, last_path] - Paths to saved checkpoints (or None if not saved)
         """
-        current = float(metrics.get(self.monitor, float("nan")))
+        raw_metric = metrics.get(self.monitor, float("nan"))
+        try:
+            current = float(raw_metric)
+        except (TypeError, ValueError):
+            current = float("nan")
         save_best = False
 
         if not self.save_best_only:
@@ -307,7 +311,13 @@ class ModelCheckpoint:
 
         # Save best checkpoint if appropriate
         if save_best:
-            fname = self.filename.format(epoch=epoch if epoch is not None else "NA", metric=f"{current:.6f}")
+            # Handle NaN by replacing with 0.0 for filename formatting
+            metric_for_filename = current if not (current != current) else 0.0  # NaN check
+            try:
+                fname = self.filename.format(epoch=epoch if epoch is not None else "NA", metric=metric_for_filename)
+            except (ValueError, KeyError):
+                # Fallback if format string doesn't work
+                fname = f"best_model_epoch{epoch}.pth"
             dest = self.save_dir / fname
             try:
                 self._atomic_save(payload, dest)

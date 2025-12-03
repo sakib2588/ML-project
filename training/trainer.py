@@ -21,6 +21,7 @@ from typing import Any, Dict, Optional, Iterable, Iterator, Tuple, Union, cast
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
+from sklearn.metrics import f1_score  # For F1-macro during validation
 
 import logging as _logging
 
@@ -166,6 +167,8 @@ class Trainer:
         weight_decay = float(opt_cfg.get("weight_decay", 0.0))
         if opt_name == "adam":
             self.optimizer = torch.optim.Adam(self.model.parameters(), lr=lr, weight_decay=weight_decay)
+        elif opt_name == "adamw":
+            self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=lr, weight_decay=weight_decay)
         elif opt_name == "sgd":
             momentum = float(opt_cfg.get("momentum", 0.9))
             self.optimizer = torch.optim.SGD(self.model.parameters(), lr=lr, momentum=momentum, weight_decay=weight_decay)
@@ -173,13 +176,63 @@ class Trainer:
             raise ValueError(f"Unsupported optimizer: {opt_name}")
         self.logger_std.info(f"Optimizer: {opt_name} lr={lr} wd={weight_decay}")
 
-        # Criterion
+        # Criterion with optional class weights for imbalanced data
         loss_cfg = self.config.get("loss", DEFAULT_TRAINING_CONFIG["loss"])
         loss_name = loss_cfg.get("name", "crossentropy").lower()
+        class_weights = loss_cfg.get("class_weights", None)
+        
         if loss_name in ("crossentropy", "cross_entropy", "cross_entropy_loss"):
-            self.criterion = nn.CrossEntropyLoss()
+            if class_weights is not None:
+                if isinstance(class_weights, (list, tuple)):
+                    weight_tensor = torch.tensor(class_weights, dtype=torch.float32).to(self.device)
+                elif class_weights == "auto":
+                    # Will be computed from data later
+                    weight_tensor = None
+                    self._compute_class_weights = True
+                else:
+                    weight_tensor = None
+                self.criterion = nn.CrossEntropyLoss(weight=weight_tensor)
+            else:
+                self.criterion = nn.CrossEntropyLoss()
         elif loss_name in ("mse", "mse_loss", "mean_squared_error"):
             self.criterion = nn.MSELoss()
+        elif loss_name in ("focal", "focal_loss", "focalloss"):
+            # Focal Loss for handling class imbalance
+            try:
+                from .focal_loss import FocalLoss
+                alpha = loss_cfg.get("alpha", 0.25)
+                gamma = loss_cfg.get("gamma", 2.0)
+                num_classes = self.config.get("num_classes", 2)
+                self.criterion = FocalLoss(alpha=alpha, gamma=gamma, num_classes=num_classes)
+                self.logger_std.info(f"Using Focal Loss with alpha={alpha}, gamma={gamma}")
+            except ImportError:
+                self.logger_std.warning("Focal Loss not available, falling back to CrossEntropyLoss")
+                self.criterion = nn.CrossEntropyLoss()
+        elif loss_name in ("weighted_focal", "weighted_focal_loss"):
+            # Weighted Focal Loss with automatic class weight computation
+            try:
+                from .focal_loss import WeightedFocalLoss
+                class_counts = loss_cfg.get("class_counts", None)
+                gamma = loss_cfg.get("gamma", 2.0)
+                self.criterion = WeightedFocalLoss(class_counts=class_counts, gamma=gamma)
+                self.logger_std.info(f"Using Weighted Focal Loss with gamma={gamma}")
+            except ImportError:
+                self.logger_std.warning("Weighted Focal Loss not available, falling back to CrossEntropyLoss")
+                self.criterion = nn.CrossEntropyLoss()
+        elif loss_name in ("class_balanced", "class_balanced_loss"):
+            # Class-Balanced Loss based on effective number of samples
+            try:
+                from .focal_loss import ClassBalancedLoss
+                class_counts = loss_cfg.get("class_counts", None)
+                gamma = loss_cfg.get("gamma", 2.0)
+                beta = loss_cfg.get("beta", 0.9999)
+                if class_counts is None:
+                    raise ValueError("class_counts required for class_balanced loss")
+                self.criterion = ClassBalancedLoss(class_counts=class_counts, gamma=gamma, beta=beta)
+                self.logger_std.info(f"Using Class-Balanced Loss with gamma={gamma}, beta={beta}")
+            except ImportError:
+                self.logger_std.warning("Class-Balanced Loss not available, falling back to CrossEntropyLoss")
+                self.criterion = nn.CrossEntropyLoss()
         else:
             raise ValueError(f"Unsupported loss: {loss_name}")
         self.logger_std.info(f"Criterion: {loss_name}")
@@ -440,12 +493,15 @@ class Trainer:
     def validate(self, epoch: int) -> Dict[str, float]:
         """
         Run validation epoch (no grads).
+        Now also computes F1-macro for imbalanced data monitoring.
         """
         self.model.eval()
         total_loss = 0.0
         correct = 0
         total = 0
         batch_count = 0
+        all_preds = []
+        all_targets = []
 
         iter_loader: Iterable[Any] = self.val_loader
         try:
@@ -462,7 +518,7 @@ class Trainer:
                 logits, loss = self._forward_and_loss(batch)
                 total_loss += float(loss.item())
 
-                # compute accuracy
+                # compute accuracy and collect predictions for F1
                 try:
                     pred_labels = logits.argmax(dim=1)
                     if isinstance(batch, (tuple, list)) and len(batch) >= 2:
@@ -477,12 +533,24 @@ class Trainer:
                         t = t.to(self.device) if torch.is_tensor(t) else torch.tensor(t, device=self.device)
                         correct += int((pred_labels == t).sum().item())
                         total += int(t.size(0))
+                        # Collect for F1 calculation
+                        all_preds.extend(pred_labels.cpu().numpy().tolist())
+                        all_targets.extend(t.cpu().numpy().tolist())
                 except Exception:
                     pass
 
         avg_loss = total_loss / (batch_count if batch_count > 0 else 1)
         accuracy = (correct / total) if total > 0 else 0.0
-        return {"loss": avg_loss, "accuracy": accuracy}
+        
+        # Compute F1-macro for better monitoring of imbalanced data performance
+        val_f1_macro = 0.0
+        if len(all_preds) > 0 and len(all_targets) > 0:
+            try:
+                val_f1_macro = float(f1_score(all_targets, all_preds, average='macro', zero_division=0))
+            except Exception:
+                val_f1_macro = 0.0
+        
+        return {"loss": avg_loss, "accuracy": accuracy, "f1_macro": val_f1_macro}
 
     # -------------------------
     # Training loop
@@ -514,6 +582,7 @@ class Trainer:
 
                 # history & metric logging
                 lr = float(self.optimizer.param_groups[0]["lr"])
+                val_f1 = val_metrics.get("f1_macro", 0.0)
                 self.history["train_loss"].append(train_metrics["loss"])
                 self.history["train_acc"].append(train_metrics["accuracy"])
                 self.history["val_loss"].append(val_metrics["loss"])
@@ -526,6 +595,7 @@ class Trainer:
                     "train_acc": train_metrics["accuracy"],
                     "val_loss": val_metrics["loss"],
                     "val_acc": val_metrics["accuracy"],
+                    "val_f1_macro": val_f1,
                     "lr": lr,
                     "epoch_time_s": time.time() - epoch_start_time
                 }
@@ -535,17 +605,17 @@ class Trainer:
                 except Exception:
                     self.logger_std.debug("MetricLogger.log_metrics failed (non-fatal).")
 
-                # Console logging
+                # Console logging - now includes F1-macro
                 self.logger_std.info(
                     f"Epoch {epoch}/{epochs} - train_loss: {train_metrics['loss']:.4f}, val_loss: {val_metrics['loss']:.4f}, "
-                    f"train_acc: {train_metrics['accuracy']:.4f}, val_acc: {val_metrics['accuracy']:.4f}, lr: {lr:.6g}"
+                    f"train_acc: {train_metrics['accuracy']:.4f}, val_acc: {val_metrics['accuracy']:.4f}, val_f1: {val_f1:.4f}, lr: {lr:.6g}"
                 )
 
                 # Checkpointing - model checkpoint may return Path or other form; normalize
                 if self.checkpoint:
                     saved_path = self.checkpoint(
                         model=self.model,
-                        metrics={"val_loss": val_metrics["loss"], "val_acc": val_metrics["accuracy"]},
+                        metrics={"val_loss": val_metrics["loss"], "val_acc": val_metrics["accuracy"], "val_f1_macro": val_f1},
                         epoch=epoch,
                         optimizer=self.optimizer
                     )
@@ -582,9 +652,9 @@ class Trainer:
                     except Exception as e:
                         self.logger_std.warning(f"Failed to save last checkpoint: {e}")
 
-                # Early stopping check
+                # Early stopping check - now includes F1 metric
                 if self.early_stopping:
-                    stop = self.early_stopping(metrics={"val_loss": val_metrics["loss"], "val_acc": val_metrics["accuracy"]}, epoch=epoch)
+                    stop = self.early_stopping(metrics={"val_loss": val_metrics["loss"], "val_acc": val_metrics["accuracy"], "val_f1_macro": val_f1}, epoch=epoch)
                     if stop:
                         self.logger_std.info(f"EarlyStopping triggered at epoch {epoch}")
                         break
