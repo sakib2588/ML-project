@@ -1,0 +1,219 @@
+{
+  "timestamp": "2025-11-30T13:49:32",
+  "analyses": {
+    "train": {
+      "split": "train",
+      "total_samples": 660503,
+      "n_classes": 10,
+      "distribution": {
+        "BENIGN": {
+          "count": 533903,
+          "percentage": 80.8327895558385,
+          "status": "OK"
+        },
+        "DoS Hulk": {
+          "count": 55751,
+          "percentage": 8.440688384458511,
+          "status": "OK"
+        },
+        "PortScan": {
+          "count": 37331,
+          "percentage": 5.651904684762976,
+          "status": "OK"
+        },
+        "DDoS": {
+          "count": 29711,
+          "percentage": 4.498238463716289,
+          "status": "OK"
+        },
+        "DoS Slowhttptest": {
+          "count": 1325,
+          "percentage": 0.200604690667567,
+          "status": "OK"
+        },
+        "DoS slowloris": {
+          "count": 1197,
+          "percentage": 0.18122552055024732,
+          "status": "OK"
+        },
+        "FTP-Patator": {
+          "count": 868,
+          "percentage": 0.13141499735807408,
+          "status": "OK"
+        },
+        "DoS GoldenEye": {
+          "count": 275,
+          "percentage": 0.041634935798929004,
+          "status": "OK"
+        },
+        "SSH-Patator": {
+          "count": 73,
+          "percentage": 0.01105218295753388,
+          "status": "CRITICAL"
+        },
+        "Bot": {
+          "count": 69,
+          "percentage": 0.01044658389136764,
+          "status": "CRITICAL"
+        }
+      },
+      "missing_critical": [],
+      "underrepresented": [
+        "SSH-Patator",
+        "Bot"
+      ]
+    },
+    "val": {
+      "split": "val",
+      "total_samples": 141537,
+      "n_classes": 10,
+      "distribution": {
+        "BENIGN": {
+          "count": 114169,
+          "percentage": 80.66371337530116,
+          "status": "OK"
+        },
+        "DoS Hulk": {
+          "count": 11926,
+          "percentage": 8.426065269152236,
+          "status": "OK"
+        },
+        "PortScan": {
+          "count": 8116,
+          "percentage": 5.734189646523523,
+          "status": "OK"
+        },
+        "DDoS": {
+          "count": 6525,
+          "percentage": 4.610101952139723,
+          "status": "OK"
+        },
+        "DoS slowloris": {
+          "count": 264,
+          "percentage": 0.18652366519002098,
+          "status": "OK"
+        },
+        "DoS Slowhttptest": {
+          "count": 261,
+          "percentage": 0.18440407808558892,
+          "status": "OK"
+        },
+        "FTP-Patator": {
+          "count": 178,
+          "percentage": 0.12576216819630204,
+          "status": "OK"
+        },
+        "DoS GoldenEye": {
+          "count": 60,
+          "percentage": 0.04239174208864113,
+          "status": "CRITICAL"
+        },
+        "Bot": {
+          "count": 21,
+          "percentage": 0.014837109731024397,
+          "status": "CRITICAL"
+        },
+        "SSH-Patator": {
+          "count": 17,
+          "percentage": 0.012010993591781654,
+          "status": "CRITICAL"
+        }
+      },
+      "missing_critical": [],
+      "underrepresented": [
+        "DoS GoldenEye",
+        "Bot",
+        "SSH-Patator"
+      ]
+    },
+    "test": {
+      "split": "test",
+      "total_samples": 141537,
+      "n_classes": 10,
+      "distribution": {
+        "BENIGN": {
+          "count": 114204,
+          "percentage": 80.68844189151953,
+          "status": "OK"
+        },
+        "DoS Hulk": {
+          "count": 11971,
+          "percentage": 8.457859075718718,
+          "status": "OK"
+        },
+        "PortScan": {
+          "count": 8106,
+          "percentage": 5.727124356175417,
+          "status": "OK"
+        },
+        "DDoS": {
+          "count": 6441,
+          "percentage": 4.550753513215625,
+          "status": "OK"
+        },
+        "DoS slowloris": {
+          "count": 270,
+          "percentage": 0.1907628393988851,
+          "status": "OK"
+        },
+        "DoS Slowhttptest": {
+          "count": 257,
+          "percentage": 0.18157796194634618,
+          "status": "OK"
+        },
+        "FTP-Patator": {
+          "count": 206,
+          "percentage": 0.14554498117100123,
+          "status": "OK"
+        },
+        "DoS GoldenEye": {
+          "count": 52,
+          "percentage": 0.03673950981015565,
+          "status": "CRITICAL"
+        },
+        "Bot": {
+          "count": 21,
+          "percentage": 0.014837109731024397,
+          "status": "CRITICAL"
+        },
+        "SSH-Patator": {
+          "count": 9,
+          "percentage": 0.00635876131329617,
+          "status": "CRITICAL"
+        }
+      },
+      "missing_critical": [],
+      "underrepresented": [
+        "DoS GoldenEye",
+        "Bot",
+        "SSH-Patator"
+      ]
+    },
+    "class_weights": {
+      "DDoS": 17.969876476725794,
+      "BENIGN": 1.0,
+      "PortScan": 14.301867080978276,
+      "DoS Hulk": 9.576563649082528,
+      "FTP-Patator": 615.0956221198157,
+      "DoS slowloris": 446.0342522974102,
+      "DoS Slowhttptest": 402.9456603773585,
+      "DoS GoldenEye": 1941.4654545454546,
+      "SSH-Patator": 7313.739726027397,
+      "Bot": 7737.72463768116
+    }
+  },
+  "recommendations": [
+    "\u26a0\ufe0f  WARNING: Classes with <100 samples: {'Bot', 'SSH-Patator'}\n   \u2192 These classes may have poor detection rates.\n   \u2192 FIX 1: Use SMOTE augmentation (run augment_rare_classes.py)\n   \u2192 FIX 2: Use class-weighted loss function\n   \u2192 FIX 3: Use Focal Loss to focus on hard examples",
+    "\u26a0\ufe0f  HIGH IMBALANCE: Ratio = 7738:1\n   \u2192 Majority class dominates training.\n   \u2192 FIX: Use balanced sampling or class weights."
+  ],
+  "thresholds": {
+    "min_samples": 100,
+    "critical_attacks": [
+      "DDoS",
+      "PortScan",
+      "Bot",
+      "SSH-Patator",
+      "FTP-Patator"
+    ]
+  }
+}

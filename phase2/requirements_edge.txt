@@ -1,0 +1,52 @@
+# Phase 2 - Edge Deployment Requirements
+# Python 3.11 environment for TFLite compatibility
+# Install: pip install -r requirements_edge.txt
+
+# Core ML Frameworks
+tensorflow==2.12.0
+torch==2.2.0
+torchvision==0.17.0
+
+# ONNX Conversion
+onnx==1.19.1
+onnxruntime==1.23.2
+onnx-tf==1.10.0
+
+# Data Processing
+numpy==1.23.5
+pandas>=2.0.0
+scikit-learn>=1.3.0
+scipy>=1.11.0
+imbalanced-learn>=0.11.0  # For SMOTE in pre_phase2
+
+# Configuration
+PyYAML>=6.0
+python-dotenv>=1.0.0
+
+# Visualization
+matplotlib>=3.7.0
+seaborn>=0.12.0
+plotly>=5.15.0
+
+# Utilities
+tqdm>=4.65.0
+colorama>=0.4.6
+tabulate>=0.9.0
+
+# Pruning (PyTorch native)
+# torch.nn.utils.prune is built-in
+
+# Hardware benchmarking (optional - Pi only)
+# smbus2>=0.4.0  # For INA219 energy measurement
+# psutil>=5.9.0  # For memory monitoring
+
+# Development
+pytest>=7.4.0
+pytest-cov>=4.1.0
+black>=23.7.0
+flake8>=6.1.0
+isort>=5.12.0
+
+# Jupyter (optional)
+jupyter>=1.0.0
+ipykernel>=6.25.0
