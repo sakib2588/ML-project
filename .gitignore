@@ -1,0 +1,80 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+.venv/
+.venv_edge/
+ENV/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Data files (large datasets)
+data/raw/
+data/processed/
+data/splits/
+*.parquet
+*.csv
+*.npy
+*.npz
+
+# Models and artifacts
+models/*.h5
+models/*.pt
+models/*.pth
+models/*.tflite
+artifacts/
+experiments/
+*.ckpt
+checkpoints/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.cache
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Coverage
+.coverage
+htmlcov/
+
+# Test artifacts
+.pytest_cache/
+.tox/
