@@ -422,6 +422,37 @@ ids-compression-benchmark/
 
 ---
 
+## 🧹 File Management Utilities
+
+### Delete Multiple Files from Terminal
+
+This repository includes a powerful file deletion utility for safely managing files from the command line:
+
+```bash
+# Interactive mode - select files to delete
+python scripts/delete_files.py --interactive
+
+# Delete files by pattern (with dry-run preview)
+python scripts/delete_files.py --pattern "*.log" --dry-run
+python scripts/delete_files.py --pattern "*.log"
+
+# Delete specific files
+python scripts/delete_files.py --files old_file1.txt old_file2.log
+
+# Delete with exclusions
+python scripts/delete_files.py --pattern "*.md" --exclude README.md
+```
+
+**Safety Features:**
+- 🔒 Protected files (Python scripts, git files, requirements.txt)
+- 👁️ Dry-run mode to preview before deletion
+- ✅ Confirmation prompts
+- 📊 Size display and deletion summary
+
+See [File Deletion Utility Documentation](docs/FILE_DELETION_UTILITY.md) for complete guide.
+
+---
+
 ## 🔧 Hardware Requirements
 
 ### Development/Training
